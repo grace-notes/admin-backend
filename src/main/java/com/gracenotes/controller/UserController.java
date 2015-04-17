@@ -1,9 +1,6 @@
 package com.gracenotes.controller;
 
-import com.gracenotes.model.MetaJSON;
-import com.gracenotes.model.ResponseJSON;
-import com.gracenotes.model.Session;
-import com.gracenotes.model.User;
+import com.gracenotes.model.*;
 import com.gracenotes.util.PasswordEncryptionHelper;
 import com.gracenotes.util.PasswordHashingHelper;
 import org.codehaus.jackson.JsonParser;
@@ -16,6 +13,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -36,6 +34,7 @@ public class UserController {
     public ResponseJSON create(@RequestHeader("Authorization") String key, @RequestBody User user) {
         ResponseJSON response = new ResponseJSON();
         MetaJSON meta = new MetaJSON();
+        UserFront userFront = null;
         // decrypt the key
         try {
             String decryptedKey = PasswordEncryptionHelper.decrypt(key);
@@ -61,6 +60,7 @@ public class UserController {
                         user.setModifiedAt(new DateTime().toString());
                         user.setHashedEmail(PasswordHashingHelper.toMD5(user.getEmail()));
                         mongoOperation.save(user);
+                        userFront = new UserFront(user);
                         meta.setStatus(1);
                         meta.setStatusText("SUCCESS");
                     } else {
@@ -74,7 +74,7 @@ public class UserController {
             meta.setStatusText(e.getMessage());
             e.printStackTrace();
         }
-        response.setData(user);
+        response.setData(userFront);
         response.setMeta(meta);
         return response;
     }
@@ -86,6 +86,7 @@ public class UserController {
     public ResponseJSON list(@RequestHeader("Authorization") String key) {
         ResponseJSON response = new ResponseJSON();
         MetaJSON meta = new MetaJSON();
+        List<UserFront> userFronts = new ArrayList<>();
         List<User> users = null;
         // decrypt the key
         try {
@@ -104,6 +105,9 @@ public class UserController {
                     meta.setStatusText("Invalid key");
                 } else {
                     users = mongoOperation.findAll(User.class);
+                    for(User user : users) {
+                        userFronts.add(new UserFront(user));
+                    }
                     meta.setStatus(1);
                     meta.setStatusText("SUCCESS");
                 }
@@ -113,7 +117,7 @@ public class UserController {
             meta.setStatusText(e.getMessage());
             e.printStackTrace();
         }
-        response.setData(users);
+        response.setData(userFronts);
         response.setMeta(meta);
         return response;
     }
@@ -121,7 +125,7 @@ public class UserController {
     @RequestMapping(value="/login", method=RequestMethod.POST)
     public ResponseJSON logIn(@RequestBody Object obj) {
         ObjectMapper objectMapper = new ObjectMapper();
-        Session session = null;
+        Session session = new Session();
         ResponseJSON response = new ResponseJSON();
         MetaJSON meta = new MetaJSON();
         try {
@@ -129,7 +133,7 @@ public class UserController {
             JsonParser jsonParser = objectMapper.getJsonFactory().createJsonParser(json);
             User user = objectMapper.readValue(jsonParser, User.class);
             // encrypt the password to match it up against what's in the database.
-            user.setPassword(PasswordHashingHelper.toSHA1(user.getPassword()));
+            user.setPassword(PasswordHashingHelper.toSCrypt(user.getPassword()));
             // see if that user exists in the database
             Query searchUserQuery = new Query(Criteria.where("email").is(user.getEmail()));
             User savedUser = mongoOperation.findOne(searchUserQuery, User.class);
@@ -142,8 +146,7 @@ public class UserController {
                     meta.setStatusText("Invalid username/password");
                 } else {
                     user = savedUser;
-                    session = new Session();
-                    session.setUser(user);
+                    session.setUser(new UserFront(user));
                     session.setKey(PasswordEncryptionHelper.encrypt(user.getEmail() + ":" + user.getPassword()));
                     session.setHashedEmail(PasswordHashingHelper.toMD5(user.getEmail()));
                     meta.setStatus(1);
@@ -172,7 +175,7 @@ public class UserController {
             JsonParser jsonParser = mapper.getJsonFactory().createJsonParser(json);
             User user = mapper.readValue(jsonParser, User.class);
             // encrypt the password when saving to the database
-            user.setPassword(PasswordHashingHelper.toSHA1(user.getPassword()));
+            user.setPassword(PasswordHashingHelper.toSCrypt(user.getPassword()));
             // determine if user already exists if so don't save
             Query searchUserQuery = new Query(Criteria.where("email").is(user.getEmail()));
             User savedUser = mongoOperation.findOne(searchUserQuery, User.class);
@@ -183,7 +186,7 @@ public class UserController {
                 user.setHashedEmail(PasswordHashingHelper.toMD5(user.getEmail()));
                 mongoOperation.save(user);
                 session = new Session();
-                session.setUser(user);
+                session.setUser(new UserFront(user));
                 session.setKey(PasswordEncryptionHelper.encrypt(user.getEmail() + ":" + user.getPassword()));
                 meta.setStatus(1);
                 meta.setStatusText("SUCCESS");

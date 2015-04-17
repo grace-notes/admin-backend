@@ -1,5 +1,7 @@
 package com.gracenotes.util;
 
+import com.lambdaworks.crypto.SCryptUtil;
+
 import java.security.MessageDigest;
 import java.util.Formatter;
 
@@ -7,6 +9,16 @@ import java.util.Formatter;
  * Created by adam on 4/8/15.
  */
 public class PasswordHashingHelper {
+
+    public static String toSCrypt(String password) {
+        String sCrypt;
+        int N = 16384;
+        int r = 8;
+        int p = 1;
+
+        sCrypt = SCryptUtil.scrypt(password, N, r, p);
+        return sCrypt;
+    }
 
     public static String toMD5(String password) {
         String md5 = "";
