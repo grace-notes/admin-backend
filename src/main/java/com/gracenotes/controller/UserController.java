@@ -133,7 +133,7 @@ public class UserController {
             JsonParser jsonParser = objectMapper.getJsonFactory().createJsonParser(json);
             User user = objectMapper.readValue(jsonParser, User.class);
             // encrypt the password to match it up against what's in the database.
-            user.setPassword(PasswordHashingHelper.toSCrypt(user.getPassword()));
+            //user.setPassword(PasswordHashingHelper.toSCrypt(user.getPassword()));
             // see if that user exists in the database
             Query searchUserQuery = new Query(Criteria.where("email").is(user.getEmail()));
             User savedUser = mongoOperation.findOne(searchUserQuery, User.class);
@@ -141,7 +141,7 @@ public class UserController {
                 meta.setStatus(2);
                 meta.setStatusText("Invalid username/password");
             } else {
-                if(!savedUser.getPassword().equals(user.getPassword())) {
+                if(!PasswordHashingHelper.checkSCrypt(user.getPassword(), savedUser.getPassword())) {
                     meta.setStatus(2);
                     meta.setStatusText("Invalid username/password");
                 } else {

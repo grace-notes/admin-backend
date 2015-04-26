@@ -10,6 +10,10 @@ import java.util.Formatter;
  */
 public class PasswordHashingHelper {
 
+    public static boolean checkSCrypt(String password, String sCrypt) {
+        return SCryptUtil.check(password, sCrypt);
+    }
+
     public static String toSCrypt(String password) {
         String sCrypt;
         int N = 16384;
