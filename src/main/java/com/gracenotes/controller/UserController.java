@@ -96,21 +96,21 @@ public class UserController {
             String hashedPassword = credentials.get(1);
             Query searchUserQuery = new Query(Criteria.where("email").is(email));
             User savedUser = mongoOperation.findOne(searchUserQuery, User.class);
-            if(null == savedUser) {
+            boolean passed = false;
+            if (null != savedUser) {
+                if(savedUser.getPassword().equals(hashedPassword)) { passed = true; }
+            }
+            if(key.equals(masterKey)) { passed = true; }
+            if(passed) {
+                users = mongoOperation.findAll(User.class);
+                for(User user : users) {
+                    userFronts.add(new UserFront(user));
+                }
+                meta.setStatus(1);
+                meta.setStatusText("SUCCESS");
+            } else {
                 meta.setStatus(2);
                 meta.setStatusText("Invalid key");
-            } else {
-                if (!savedUser.getPassword().equals(hashedPassword)) {
-                    meta.setStatus(2);
-                    meta.setStatusText("Invalid key");
-                } else {
-                    users = mongoOperation.findAll(User.class);
-                    for(User user : users) {
-                        userFronts.add(new UserFront(user));
-                    }
-                    meta.setStatus(1);
-                    meta.setStatusText("SUCCESS");
-                }
             }
         } catch (Exception e) {
             meta.setStatus(3);

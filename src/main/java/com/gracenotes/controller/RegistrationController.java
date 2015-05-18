@@ -39,30 +39,30 @@ public class RegistrationController {
             String email = credentials.get(0);
             String hashedPassword = credentials.get(1);
             Query searchUserQuery = new Query(Criteria.where("email").is(email));
+            boolean passed = false;
             User savedUser = mongoOperation.findOne(searchUserQuery, User.class);
-            if(null == savedUser && !(key.equals(masterKey))) {
+            if (null != savedUser) {
+                if(savedUser.getPassword().equals(hashedPassword)) { passed = true; }
+            }
+            if(key.equals(masterKey)) { passed = true; }
+            if(passed) {
+                // check if registration already exists
+                Query searchRegistrationQuery = new Query(Criteria.where("email").is(registration.getEmail()));
+                Registration savedRegistration = mongoOperation.findOne(searchRegistrationQuery, Registration.class);
+                if (null == savedRegistration) {
+                    // create it
+                    registration.setCreatedAt(new DateTime().toString());
+                    registration.setModifiedAt(new DateTime().toString());
+                    mongoOperation.save(registration);
+                    meta.setStatus(1);
+                    meta.setStatusText("SUCCESS");
+                } else {
+                    meta.setStatus(2);
+                    meta.setStatusText("Email already exists");
+                }
+            } else {
                 meta.setStatus(2);
                 meta.setStatusText("Invalid key");
-            } else {
-                if (!savedUser.getPassword().equals(hashedPassword) && !(key.equals(masterKey))) {
-                    meta.setStatus(2);
-                    meta.setStatusText("Invalid key");
-                } else {
-                    // check if registration already exists
-                    Query searchRegistrationQuery = new Query(Criteria.where("email").is(registration.getEmail()));
-                    Registration savedRegistration = mongoOperation.findOne(searchRegistrationQuery, Registration.class);
-                    if(null == savedRegistration) {
-                        // create it
-                        registration.setCreatedAt(new DateTime().toString());
-                        registration.setModifiedAt(new DateTime().toString());
-                        mongoOperation.save(registration);
-                        meta.setStatus(1);
-                        meta.setStatusText("SUCCESS");
-                    } else {
-                        meta.setStatus(2);
-                        meta.setStatusText("Email already exists");
-                    }
-                }
             }
         } catch(Exception e) {
             meta.setStatus(3);
@@ -88,18 +88,18 @@ public class RegistrationController {
             String hashedPassword = credentials.get(1);
             Query searchUserQuery = new Query(Criteria.where("email").is(email));
             User savedUser = mongoOperation.findOne(searchUserQuery, User.class);
-            if(null == savedUser) {
+            boolean passed = false;
+            if (null != savedUser) {
+                if(savedUser.getPassword().equals(hashedPassword)) { passed = true; }
+            }
+            if(key.equals(masterKey)) { passed = true; }
+            if(passed) {
+                registrations = mongoOperation.findAll(Registration.class);
+                meta.setStatus(1);
+                meta.setStatusText("SUCCESS");
+            } else {
                 meta.setStatus(2);
                 meta.setStatusText("Invalid key");
-            } else {
-                if (!savedUser.getPassword().equals(hashedPassword)) {
-                    meta.setStatus(2);
-                    meta.setStatusText("Invalid key");
-                } else {
-                    registrations = mongoOperation.findAll(Registration.class);
-                    meta.setStatus(1);
-                    meta.setStatusText("SUCCESS");
-                }
             }
         } catch (Exception e) {
             meta.setStatus(3);

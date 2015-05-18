@@ -38,29 +38,29 @@ public class CourseRequestController {
             String hashedPassword = credentials.get(1);
             Query searchUserQuery = new Query(Criteria.where("email").is(email));
             User savedUser = mongoOperation.findOne(searchUserQuery, User.class);
-            if(null == savedUser && !(key.equals(masterKey))) {
+            boolean passed = false;
+            if (null != savedUser) {
+                if(savedUser.getPassword().equals(hashedPassword)) { passed = true; }
+            }
+            if(key.equals(masterKey)) { passed = true; }
+            if(passed) {
+                // check if registration already exists
+                Query searchCourseRequestQuery = new Query(Criteria.where("email").is(courseRequest.getEmail()));
+                CourseRequest savedCourseRequest = mongoOperation.findOne(searchCourseRequestQuery, CourseRequest.class);
+                if(null == savedCourseRequest) {
+                    // create it
+                    courseRequest.setCreatedAt(new DateTime().toString());
+                    courseRequest.setModifiedAt(new DateTime().toString());
+                    mongoOperation.save(courseRequest);
+                    meta.setStatus(1);
+                    meta.setStatusText("SUCCESS");
+                } else {
+                    meta.setStatus(2);
+                    meta.setStatusText("Course already exists");
+                }
+            } else {
                 meta.setStatus(2);
                 meta.setStatusText("Invalid key");
-            } else {
-                if (!savedUser.getPassword().equals(hashedPassword) && !(key.equals(masterKey))) {
-                    meta.setStatus(2);
-                    meta.setStatusText("Invalid key");
-                } else {
-                    // check if registration already exists
-                    Query searchCourseRequestQuery = new Query(Criteria.where("email").is(courseRequest.getEmail()));
-                    CourseRequest savedCourseRequest = mongoOperation.findOne(searchCourseRequestQuery, CourseRequest.class);
-                    if(null == savedCourseRequest) {
-                        // create it
-                        courseRequest.setCreatedAt(new DateTime().toString());
-                        courseRequest.setModifiedAt(new DateTime().toString());
-                        mongoOperation.save(courseRequest);
-                        meta.setStatus(1);
-                        meta.setStatusText("SUCCESS");
-                    } else {
-                        meta.setStatus(2);
-                        meta.setStatusText("Email already exists");
-                    }
-                }
             }
         } catch(Exception e) {
             meta.setStatus(3);
@@ -86,18 +86,18 @@ public class CourseRequestController {
             String hashedPassword = credentials.get(1);
             Query searchUserQuery = new Query(Criteria.where("email").is(email));
             User savedUser = mongoOperation.findOne(searchUserQuery, User.class);
-            if(null == savedUser) {
+            boolean passed = false;
+            if (null != savedUser) {
+                if(savedUser.getPassword().equals(hashedPassword)) { passed = true; }
+            }
+            if(key.equals(masterKey)) { passed = true; }
+            if(passed) {
+                courseRequests = mongoOperation.findAll(CourseRequest.class);
+                meta.setStatus(1);
+                meta.setStatusText("SUCCESS");
+            } else {
                 meta.setStatus(2);
                 meta.setStatusText("Invalid key");
-            } else {
-                if (!savedUser.getPassword().equals(hashedPassword)) {
-                    meta.setStatus(2);
-                    meta.setStatusText("Invalid key");
-                } else {
-                    courseRequests = mongoOperation.findAll(CourseRequest.class);
-                    meta.setStatus(1);
-                    meta.setStatusText("SUCCESS");
-                }
             }
         } catch (Exception e) {
             meta.setStatus(3);
