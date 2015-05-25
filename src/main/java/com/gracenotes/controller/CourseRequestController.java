@@ -45,7 +45,9 @@ public class CourseRequestController {
             if(key.equals(masterKey)) { passed = true; }
             if(passed) {
                 // check if registration already exists
-                Query searchCourseRequestQuery = new Query(Criteria.where("email").is(courseRequest.getEmail()));
+                Query searchCourseRequestQuery = new Query(Criteria.
+                        where("email").is(courseRequest.getEmail()).
+                        and("course").is(courseRequest.getCourse()));
                 CourseRequest savedCourseRequest = mongoOperation.findOne(searchCourseRequestQuery, CourseRequest.class);
                 if(null == savedCourseRequest) {
                     // create it

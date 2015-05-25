@@ -27,7 +27,6 @@ public class RegistrationController {
     @Autowired
     MongoOperations mongoOperation;
 
-    // create POST /users
     @RequestMapping(method = RequestMethod.POST)
     @ResponseBody
     public ResponseJSON create(@RequestHeader("Authorization") String key, @RequestBody Registration registration) {
