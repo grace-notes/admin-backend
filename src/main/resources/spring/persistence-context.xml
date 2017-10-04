@@ -9,7 +9,7 @@
           http://www.springframework.org/schema/beans/spring-beans-4.0.xsd">
 
   <bean class="java.net.URI" id="dbUrl">
-    <constructor-arg value="#{ systemEnvironment['MONGO_URL'] }"/>
+    <constructor-arg value="${MONGO_URL}"/>
   </bean>
 
   <!--<mongo:mongo host="${mongo.host}" port="${mongo.port}" />-->

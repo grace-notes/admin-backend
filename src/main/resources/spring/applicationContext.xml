@@ -22,6 +22,8 @@
     <!-- creates a java.util.Properties instance with values loaded from the supplied location -->
     <!--<util:properties id="configuration" location="file:${mongo.host}"/>-->
 
+    <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer" />
+
 	<import resource="classpath:spring/persistence-context.xml" />
 
 	<mvc:annotation-driven />
