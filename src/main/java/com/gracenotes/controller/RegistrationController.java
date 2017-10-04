@@ -79,6 +79,7 @@ public class RegistrationController {
         ResponseJSON response = new ResponseJSON();
         MetaJSON meta = new MetaJSON();
         List<Registration> registrations = new ArrayList<>();
+        
         // decrypt the key
         try {
             String decryptedKey = PasswordEncryptionHelper.decrypt(key);
