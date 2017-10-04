@@ -9,7 +9,7 @@
           http://www.springframework.org/schema/beans/spring-beans-4.0.xsd">
 
   <!--<mongo:mongo host="${mongo.host}" port="${mongo.port}" />-->
-  <mongo:db-factory host="${mongo.host}" port="${mongo.port}" dbname="${mongo.db}" username="${mongo.username}" password="${mongo.password}" />
+  <mongo:db-factory client-uri="${MONGO_URL}" />
 
   <bean id="mongoTemplate" class="org.springframework.data.mongodb.core.MongoTemplate">
     <constructor-arg name="mongoDbFactory" ref="mongoDbFactory" />
