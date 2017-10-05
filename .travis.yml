@@ -1,3 +1,5 @@
+language: java
+
 addons:
   ssh_known_hosts:
   - doulos.iakob.com
